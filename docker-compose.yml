@@ -1,21 +1,54 @@
-version: '2'
-services: 
+# Use root/example as user/password credentials
+version: '3.1'
 
+services:
   nginx:
     build:
       context: .
-    environment: 
-      - TARGET_HOSTS='mongodb:27017'
+    container_name: nginx
+    depends_on:
+      - mongo
+    volumes:
+      - ./nginx.conf:/home/nginx.conf
+      - ./bin:/home/bin
+    working_dir: /home
     ports:
       - 3000:3000
-
-  mognodb:
-    image: mongo:latest
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=bacon123
+      - PORT=3000
+      - TARGET_HOSTS='mongo:27017'
+
+  mongo:
+    image: mongo
     restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
     ports:
       - 27017:27017
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+
+  test-app:
+    depends_on:
+      - mongo
+    build:
+      context: ./testApp
+    container_name: node
+    environment:
+      - DB_HOST=nginx
+      - DB_USERNAME=root
+      - DB_PASSWORD=example
+      - DB_PORT=3000
+      - DB_SCHEMA=admin
     volumes:
-      - ./db:/data/db
+      - ./testApp:/app
+    ports:
+      - 5000:5000

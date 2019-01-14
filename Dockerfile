@@ -1,6 +1,6 @@
 FROM nginx:latest
 
-ADD nginx.conf /etc/nginx/
+ADD nginx.conf /home/
 RUN mkdir -p /home/bin
 ADD docker-entrypoint.sh /home/bin/
 WORKDIR /home
